@@ -42,7 +42,9 @@ const AdminNavbar = () => {
               <Link to="/admin-dashboard" className="bg-blue-300   p-2 rounded-lg font-semibold">
                 Manage Bookings
               </Link>
-                          
+              <Link to="/ratings" className="bg-blue-300   p-2 rounded-lg font-semibold">
+                Ratings
+              </Link>            
              
               <button
                 onClick={handleLogout}

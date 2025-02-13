@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { TypeAnimation } from "react-type-animation";
 
 
+
 const places = [
   {
     id: 1,
@@ -655,6 +656,7 @@ const UserDashboard = () => {
   };
   
   return (
+    <>
 <div className="container mx-auto p-4">
 
 <form onSubmit={handleSearch} className="mb-4">
@@ -817,7 +819,11 @@ const UserDashboard = () => {
             </div>
           </div>
        </div>
+      
+
     </div>
+    
+    </>
   );
 };
 

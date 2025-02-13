@@ -11,12 +11,14 @@ import { Link } from 'react-router-dom';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
-const PlaceDetailsPage = ({mapRef}) => {
+const PlaceDetailsPage = ({fetchBookings}) => {
+  const token = localStorage.getItem("token");
   const { id } = useParams();
   const [place, setPlace] = useState(null);
   const [events, setEvents] = useState([]);
   const [bookmarked, setBookmarked] = useState(false);
   const [rating, setRating] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
   // const [travelMode, setTravelMode] = useState("driving");
   const [userRating, setUserRating] = useState(null);
   const [tips, setTips] = useState([]);
@@ -60,6 +62,18 @@ const PlaceDetailsPage = ({mapRef}) => {
           setTips([]); 
         }
 
+        const bookmarkedStatus = localStorage.getItem(`bookmark_${id}`);
+      if (bookmarkedStatus) {
+        setBookmarked(JSON.parse(bookmarkedStatus));
+      }
+
+      // Retrieve user rating from localStorage
+      const userRatingStatus = localStorage.getItem(`rating_${id}`);
+      if (userRatingStatus) {
+        setUserRating(JSON.parse(userRatingStatus));
+      }
+      
+
         if (data.events && Array.isArray(data.events)) {
           setEvents(data.events);
         } else {
@@ -76,15 +90,28 @@ const PlaceDetailsPage = ({mapRef}) => {
     
   }, [id]);
 
+  const adultPrice = place?.price_per_adult|| 0;
+  const childPrice = place?.price_per_child || 0;
+  
+  useEffect(() => {
+    if (!place) return;
+
+    const newTotalPrice = (bookingData.adults * adultPrice) + (bookingData.children * childPrice);
+    setTotalPrice(newTotalPrice);
+  }, [bookingData.adults, bookingData.children, place, adultPrice,childPrice]);
+  
+
   if (!place) {
     return <p>Loading...</p>;
   }
+  
 
   const shareUrl = window.location.href;
   
   const handleChange = (e) => {
     setBookingData({ ...bookingData, [e.target.name]: e.target.value });
   };
+
 
 
   const handleBookingSubmit = async (e) => {
@@ -110,6 +137,7 @@ const PlaceDetailsPage = ({mapRef}) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(bookingPayload),
       });
@@ -119,11 +147,12 @@ const PlaceDetailsPage = ({mapRef}) => {
         console.log("Booking Created:", data);
         throw new Error(`Booking failed: ${data.message || 'Unknown error'}`);
       }
-  
 
+        
       // alert("Booking successful!");
       setShowBookingForm(false);
       setShowPaymentForm(true);
+      
     } catch (error) {
       console.error(error);
       alert("An error occurred while booking.");
@@ -162,7 +191,8 @@ const PlaceDetailsPage = ({mapRef}) => {
         method: bookmarked ? "DELETE" : "POST",
         headers: {
            "Content-Type": "application/json",
-           "Authorization": `Bearer ${token}`,
+          //  "Authorization": `Bearer ${token}`,
+           Authorization: `Bearer ${token}`,
           },
         body: JSON.stringify({ user: user.id, place: id })
       });
@@ -172,9 +202,10 @@ const PlaceDetailsPage = ({mapRef}) => {
 
       if (response.ok) { 
         setBookmarked(!bookmarked);
+        localStorage.setItem(`bookmark_${id}`, JSON.stringify(!bookmarked));
       } else if ( data.message === "Already bookmarked"){
         setBookmarked(true);
-        
+        localStorage.setItem(`bookmark_${id}`, JSON.stringify(true));
       } else {
       
       console.error("Error:", data);
@@ -194,12 +225,25 @@ const PlaceDetailsPage = ({mapRef}) => {
     try {
       const response = await fetch(`http://127.0.0.1:8000/api/ratings/${id}/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: user.id, place: id, rating: selectedRating })
+        headers: { 
+          "Content-Type": "application/json",
+          // "Authorization": `Bearer ${user.token}`
+          Authorization: `Bearer ${token}`,
+         },
+        body: JSON.stringify({rating: selectedRating })
       });
+
+      if (response.status === 401) {
+        console.error("Unauthorized: Invalid or missing token");
+      }
+      
       if (response.ok) {
         const data = await response.json();
         setRating(data.new_average_rating);
+        setUserRating(data.user_rating);
+
+        localStorage.setItem(`rating_${id}`, JSON.stringify(selectedRating));
+
       }
     } catch (error) {
       console.error("Error submitting rating", error);
@@ -234,16 +278,16 @@ const PlaceDetailsPage = ({mapRef}) => {
       </div>
       <div className="mt-6 text-center">
         <h3 className="text-lg font-semibold">Rate this place</h3>
+        <span>Your Rating: {userRating || "Not rated yet"}</span>
         <div className="flex justify-center space-x-2 mt-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <FaStar key={star} className={`cursor-pointer text-2xl ${star <= (userRating || rating) ? 'text-yellow-500' : 'text-gray-400'}`} onClick={() => handleRating(star)} />
           ))}
         </div>
-        <p className="mt-2">Average Rating: {place.average_rating ? place.average_rating.toFixed(1) : "No ratings yet"}</p>
+        <p className="mt-2">Average Rating: {place?.average_rating ? place.average_rating.toFixed(1) : "No ratings yet"}</p>
       </div>
-    
-
-      {/* Events Section */}
+        
+          {/* Events Section */}
       <div className="mt-10 bg-gray-200 p-6 rounded-lg">
         <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
           <FaCalendarAlt className="mr-2" /> Upcoming Events
@@ -261,6 +305,7 @@ const PlaceDetailsPage = ({mapRef}) => {
       </div>
 
       {/* booking */}
+      {place.requires_booking && (
       <div className="mt-10 bg-blue-100 p-6 rounded-lg">
         <h2 className="text-2xl font-bold text-blue-800 mb-4 flex items-center">
           <FaHotel className="mr-2" /> Book Your Stay
@@ -398,6 +443,7 @@ const PlaceDetailsPage = ({mapRef}) => {
             />
             </div>
 
+            
             {/* Trip Preferences */}
             <div className="flex flex-col">
             <label className="block mb-2">Trip Preferences:</label>
@@ -409,6 +455,14 @@ const PlaceDetailsPage = ({mapRef}) => {
               placeholder="Any specific requests or preferences?"
             />
             </div>
+
+            <div className="col-span-2 mt-4">
+            <h3 className="text-xl font-bold">Total Price</h3>
+            <p>Adults: {bookingData.adults} x Ksh {adultPrice} = Ksh {bookingData.adults * adultPrice}</p>
+            <p>Children: {bookingData.children} x Ksh {childPrice} = Ksh {bookingData.children * childPrice}</p>
+            <p className="font-semibold">Total: Ksh {totalPrice}</p>
+            </div>
+
             
             <div className="col-span-2 flex justify-center">
             <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
@@ -427,7 +481,7 @@ const PlaceDetailsPage = ({mapRef}) => {
                 </div>
             )}
       </div>
-           
+      )}     
 
       {/* Travel Tips */}
       <div className="mt-10 bg-gray-100 p-6 rounded-lg">

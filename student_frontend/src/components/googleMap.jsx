@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { GoogleMap, InfoWindow} from "@react-google-maps/api";
 import TailwindSpinner from "./tailwindspinner";
 import { useLocation } from "react-router-dom";
+import Footer from "./footer";
 
 const containerStyle = {
   width: "100%",
@@ -262,6 +263,7 @@ const GoogleMapComponent = () => {
     </ul>
       </div>
     )}
+    <Footer/>
     </>
   );
 };

@@ -112,22 +112,22 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 #     }
 # }
 
-# DATABASES = {
-#     'default':{
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME':config("DATABASE_NAME"),
-#         'USER':config("DATABASE_USER"),
-#         'PASSWORD':config("DATABASE_PASSWORD"),
-#         'HOST':'localhost',
-#         'PORT':'5432',
-#     }
-# }
+DATABASES = {
+    'default':{
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME':'vacation_db',
+        'USER':'vacation_user',
+        'PASSWORD':'joyjoy',
+        'HOST':'localhost',
+        'PORT':'5432',
+    }
+}
 
-DATABASES={
+# DATABASES={
 
- "default":
- dj_database_url.parse("postgresql://vacation_findet_user:QiRIo86lTQyYQsRP67Jx4q1Lanwgl9Zl@dpg-cul0imq3esus73b1olpg-a.oregon-postgres.render.com/vacation_findet")
- }
+#  "default":
+#  dj_database_url.parse("postgresql://vacation_findet_user:QiRIo86lTQyYQsRP67Jx4q1Lanwgl9Zl@dpg-cul0imq3esus73b1olpg-a.oregon-postgres.render.com/vacation_findet")
+#  }
  
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

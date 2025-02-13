@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
-
+from django.utils.timezone import now
 
 class User(AbstractUser):
     role = models.CharField(max_length=50, choices=[('admin', 'Admin'), ('traveller', 'Traveller')], default='traveller')
@@ -17,9 +17,18 @@ class Place(models.Model):
     longitude = models.FloatField(default=0.0)
     tips = models.JSONField(default=list)
     events = models.JSONField(default=list)
+    requires_booking = models.BooleanField(default=False)
+    
+    price_per_adult = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    price_per_child = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     def __str__(self):
         return self.name
+    
+    def average_rating(self):
+        ratings = self.ratings.all()
+        return ratings.aggregate(models.Avg('rating'))['rating__avg'] or 0
+
 
 from django.db import models
 
@@ -49,6 +58,8 @@ class Booking(models.Model):
     trip_preferences = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('confirmed', 'Confirmed')], default='pending')
+    
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     def __str__(self):
         return f"Booking by {self.user.username} at {self.place.name}"
@@ -86,8 +97,12 @@ class Bookmark(models.Model):
 
 class Rating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="ratings")
     rating = models.IntegerField()
+    created_at = models.DateTimeField(default=now) 
+    
+    class Meta:
+        unique_together = ('user', 'place')
 
     def __str__(self):
         return f"{self.user.username} rated {self.place.name} {self.rating}/5"

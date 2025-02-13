@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User, Place, Event, Booking, TravelTip, Itinerary, Bookmark, Rating
+from django.db.models import Avg
 
 class PlaceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,9 +55,18 @@ class SignupSerializer(serializers.ModelSerializer):
 
 
 class PlaceSerializer(serializers.ModelSerializer):
+    average_rating = serializers.SerializerMethodField()
+    
+    def get_average_rating(self, obj):
+        avg_rating = obj.ratings.aggregate(Avg('rating'))['rating__avg']
+        return round(avg_rating, 2) if avg_rating else 0  # Default to 0 if no ratings
+    
     class Meta:
         model = Place
         fields =  '__all__'
+        
+    # def get_average_rating(self, obj):
+    #     return obj.average_rating()
   
  
 class EventSerializer(serializers.ModelSerializer):
@@ -67,6 +77,8 @@ class EventSerializer(serializers.ModelSerializer):
 
 class BookingSerializer(serializers.ModelSerializer):
     place = PlaceSerializer(read_only=True)
+    # place = serializers.CharField(source='place.name', read_only=True)
+    
     class Meta:
         model = Booking
         fields = '__all__'
@@ -87,6 +99,9 @@ class BookmarkSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RatingSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    place = serializers.CharField(source="place.name", read_only=True)
+    
     class Meta:
         model = Rating
         fields = '__all__'

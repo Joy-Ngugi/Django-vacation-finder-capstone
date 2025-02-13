@@ -15,6 +15,8 @@ import Profile from './components/profile';
 import { LoadScript } from "@react-google-maps/api";
 import AdminNavbar from './components/adminNavbar';
 import UserNavbar from './components/userNavbar';
+import RatingsPage from './components/adminRatings';
+
 
 
 function App() {
@@ -55,14 +57,17 @@ function App() {
         <Route path="/maps" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        
+        <Route path="/ratings" element={<RatingsPage />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/" element={<UserDashboard />} />
           <Route path="/place-details/:id" element={<PlaceDetailsPage />} />
           <Route path="/success" element={<Success />} />
           <Route path="/cancel" element={<Cancel />} />
           <Route path="/profile" element={<Profile />} />
+          {/* <Route path="/footer" element={<Footer/>}/> */}
       </Routes>
+      
+      {/* <Footer className="absolute bottom-96 left-0 w-full" /> */}
     </Router>
   </LoadScript>
     
@@ -74,7 +79,7 @@ function Navbar() {
   const location = useLocation();
 
   // Conditionally render UserNavbar or AdminNavbar
-  if (location.pathname === '/admin-dashboard') {
+  if (location.pathname === '/admin-dashboard' || location.pathname === "/ratings") {
     return <AdminNavbar />;
   }
   return <UserNavbar />;

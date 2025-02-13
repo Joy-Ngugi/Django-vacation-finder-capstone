@@ -22,8 +22,9 @@ from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 # from .mpesa_payment import lipa_na_mpesa
 import stripe
-
+from rest_framework.permissions import AllowAny
 from decouple import config
+from django.db.models import Avg
 
 
 class CustomRefreshToken(RefreshToken):
@@ -202,11 +203,21 @@ class ItineraryCreateView(generics.CreateAPIView):
         serializer.save(user=self.request.user)
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_booking(request):
     data = request.data
+    user = request.user
     try:
-        user = User.objects.get(id=data['user'])
+        # user = User.objects.get(id=data['user'])
+        
         place = Place.objects.get(id=data['place'])
+        
+        price_per_adult = place.price_per_adult
+        price_per_child = place.price_per_child
+        
+        # Calculate the total price
+        total_price = (data['adults'] * price_per_adult) + (data['children'] * price_per_child)
+        
         booking = Booking.objects.create(
             user=user,
             place=place,
@@ -224,14 +235,14 @@ def create_booking(request):
         
         send_mail(
                 "Thank you for booking",
-                f"Dear {booking.first_name},\n\nYour booking has been received at Safiri Central Kenya and is being processed. We will get back to you in 24 hrs. Thank you for choosing us!",
+                f"Dear {booking.first_name},\n\nYour booking has been received at {booking.place} through Safiri Central Kenya and is being processed. We will get back to you in 24 hrs. Thank you for choosing us! Your total payment price: {total_price}",
                 "joyngugi559@gmail.com",
                 [booking.email],
                 fail_silently=False,
                 # from_email='Safiri Central Kenya <joyngugi559@gmail.com>',
             )
         
-        return Response({"message": "Booking successful!  A confirmation email has been sent."}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Booking successful!  A confirmation email has been sent.",  "total_price": total_price}, status=status.HTTP_201_CREATED)
     except Exception as e:
         print(f"Error: {str(e)}")
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -262,7 +273,7 @@ def update_booking_status(request, booking_id):
             
             if new_status == "Confirmed":
                 subject = "Booking Status Update"
-                message = f"Dear {booking.first_name},\n\nYour booking status is now confirmed at Safiri Central Kenya. Your stay is from {booking.check_in} to {booking.check_out}. Thank you for choosing us!"
+                message = f"Dear {booking.first_name},\n\nYour booking status for {booking.place} is now confirmed at Safiri Central Kenya. Your stay is from {booking.check_in} to {booking.check_out}. Number of adults is {booking.adults} and children are {booking.children} Thank you for choosing us! "
             elif new_status == "Cancelled":
                 subject = "Booking Status Update"
                 message = f"Dear {booking.first_name},\n\nWe regret to inform you that your booking has been cancelled. If you need further assistance, feel free to reach out."
@@ -400,6 +411,25 @@ class BookmarkListView(APIView):
         serializer = BookmarkSerializer(bookmarks, many=True)
         return Response(serializer.data)
     
+# class RatePlaceView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def post(self, request, id):
+#         place = get_object_or_404(Place, id=id)
+#         rating_value = request.data.get("rating")
+
+#         if not (1 <= int(rating_value) <= 5):
+#             return Response({"error": "Rating must be between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         rating, created = Rating.objects.update_or_create(
+#             user=request.user, place=place,
+#             defaults={"rating": rating_value}
+#         )
+#         new_avg_rating = Rating.objects.filter(place=place).aggregate(Avg('rating'))['rating__avg']
+        
+#         return Response({"message": "Rating submitted successfully", "new_average_rating": new_avg_rating}, status=status.HTTP_201_CREATED)
+
+
 class RatePlaceView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -407,14 +437,31 @@ class RatePlaceView(APIView):
         place = get_object_or_404(Place, id=id)
         rating_value = request.data.get("rating")
 
-        if not (1 <= rating_value <= 5):
-            return Response({"error": "Rating must be between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate rating input
+        try:
+            rating_value = int(rating_value)
+            if rating_value < 1 or rating_value > 5:
+                return Response({"error": "Rating must be between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"error": "Invalid rating value"}, status=status.HTTP_400_BAD_REQUEST)
 
+        print(f"User: {request.user}, Place: {place.name}, Rating Value: {rating_value}")
+        
         rating, created = Rating.objects.update_or_create(
             user=request.user, place=place,
             defaults={"rating": rating_value}
         )
-        return Response({"message": "Rating submitted successfully"}, status=status.HTTP_201_CREATED)
+
+        print(f"Rating saved: {rating}")
+        # Calculate new average rating
+        new_avg_rating = Rating.objects.filter(place=place).aggregate(Avg('rating'))['rating__avg']
+
+        return Response({
+            "message": "Rating submitted successfully",
+            "user_rating": rating.rating,
+            "new_average_rating": round(new_avg_rating, 2)  # Round for readability
+        }, status=status.HTTP_201_CREATED)
+
 
 class UserBookmarksView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -481,17 +528,21 @@ def user_bookmarks(request):
 @permission_classes([IsAuthenticated])
 def user_bookings(request):
     print(f"Request received from user: {request.user}")
-    user = request.user
-    print(f"Authenticated user: {user.username}")
-    bookings = Booking.objects.filter(user=user).select_related("place") 
-    print(f"Bookings found: {bookings}")
+    # user = request.user
+    # print(f"Authenticated user: {user.username}")
+    bookings = Booking.objects.filter(user=request.user).select_related("place") 
+    print(f"Bookings found: {list(bookings)}")
+    # places = [booking.place for booking in bookings]
+    # print(f"places {places}")
     
-    if bookings.count() == 0:
-        print("No bookings found")
+    if not bookings.exists():
+        print("No bookings found for this user")
         return Response([], status=200)
     
-    serializer = BookingSerializer(bookings, many=True)  
+    # serializer = PlaceSerializer(places, many=True)  
+    serializer = BookingSerializer(bookings, many=True)
     return Response(serializer.data)
+
 
 class BulkBookingDeleteView(APIView):
     def delete(self, request):
@@ -507,3 +558,16 @@ class BulkBookingDeleteView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
   
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def get_all_ratings(request):
+    ratings = Rating.objects.all().order_by('-created_at')
+    serializer = RatingSerializer(ratings, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def get_places_with_ratings(request):
+    places = Place.objects.all()
+    serializer = PlaceSerializer(places, many=True)
+    return Response(serializer.data)
