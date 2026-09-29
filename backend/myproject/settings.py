@@ -110,19 +110,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-# DATABASES = {
-#     'default':{
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME':'vacation_db',
-#         'USER':'vacation_user',
-#         'PASSWORD':'joyjoy',
-#         'HOST':'localhost',
-#         'PORT':'5432',
-#     }
-# }
-
-
  
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -169,22 +156,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-
-
-EMAIL_HOST_USER="joyngugi559@gmail.com"
-EMAIL_HOST_PASSWORD="vuwb qkem kvdr avfs"
-DEFAULT_FROM_EMAIL="Safiri Central Kenya <joyngugi559@gmail.com>"
-
-
-
-STRIPE_PUBLIC_KEY='pk_test_51Qo6xj07eTs0A6VxMRbqppoHQlsEZ16Rb192rkPJKSVHA37srYVqj1dIki4Z8oCFaKsreJ13JM3srMntzRsXrYjK00M0IdRqj2'
-STRIPE_SECRET_KEY='sk_test_51Qo6xj07eTs0A6VxMWJNSOTBk9FXRUf91UV8UN0KexLSc6GAFYwxiqRI4WwwhoWyvU4k00BIS69FYEWIYuZpYcAs00Q53f0DfN'
-STRIPE_WEBHOOK_SECRET='whsec_776a95adbc68bc3a95615b1e91cc22fea02cf3f16c369aec84ecb6b11e0999cet'
 
