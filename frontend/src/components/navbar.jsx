@@ -36,7 +36,7 @@ const Navbar = () => {
         : 'text-gray-700 hover:text-blue-600'
     }`;
 
-  const linkUnderline = ({ isActive }) => isActive;
+  // const linkUnderline = ({ isActive }) => isActive;
 
   return (
     <nav
