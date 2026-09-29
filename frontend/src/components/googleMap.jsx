@@ -3,6 +3,7 @@ import { GoogleMap, InfoWindow} from "@react-google-maps/api";
 import TailwindSpinner from "./tailwindspinner";
 import { useLocation } from "react-router-dom";
 import Footer from "./footer";
+import API_URL from "../services/api";
 
 const containerStyle = {
   width: "100%",
@@ -53,7 +54,7 @@ const GoogleMapComponent = () => {
 
   useEffect(() => {
     setLoading(true);
-    fetch("http://127.0.0.1:8000/api/places/") 
+    fetch(`${API_URL}/api/places/`) 
       .then((response) => response.json())
       .then((data) => {
         setPlaces(data);

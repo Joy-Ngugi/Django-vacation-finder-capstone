@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { notify } from "../utils/toast";
+import API_URL from "../services/api";
 
 const AdminDashboard = () => {
   const [bookings, setBookings] = useState([]);
@@ -8,7 +9,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/admin/bookings/");
+        const response = await fetch(`${API_URL}/api/admin/bookings/`);
         if (!response.ok) {
           throw new Error("Failed to fetch bookings");
         }
@@ -33,7 +34,7 @@ const AdminDashboard = () => {
   const updateBookingStatus = async (id, status) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/admin/bookings/${id}/update/`,
+        `${API_URL}/api/admin/bookings/${id}/update/`,
         {
           method: "PATCH",
           headers: {
@@ -57,7 +58,7 @@ const AdminDashboard = () => {
   const deleteSelectedBookings = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/admin/bookings/bulk-delete/",
+        `${API_URL}/api/admin/bookings/bulk-delete/`,
         {
           method: "DELETE",
           headers: {

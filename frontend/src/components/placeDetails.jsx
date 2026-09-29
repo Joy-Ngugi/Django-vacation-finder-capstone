@@ -11,6 +11,7 @@ import Checkout from "./checkout";
 import AuthContext from "../context/authContext";
 import { Link } from "react-router-dom";
 import { notify } from "../utils/toast";
+import API_URL from "../services/api";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
@@ -51,7 +52,7 @@ const PlaceDetailsPage = ({ fetchBookings }) => {
       }
 
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/places/${id}/`);
+        const response = await fetch(`${API_URL}/api/places/${id}/`);
         if (!response.ok) {
           throw new Error("Place not found");
         }
@@ -133,7 +134,7 @@ const PlaceDetailsPage = ({ fetchBookings }) => {
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/bookings/", {
+      const response = await fetch(`${API_URL}/api/bookings/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -199,7 +200,7 @@ const PlaceDetailsPage = ({ fetchBookings }) => {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/bookmarks/${id}/`, {
+      const response = await fetch(`${API_URL}/api/bookmarks/${id}/`, {
         method: bookmarked ? "DELETE" : "POST",
         headers: {
           "Content-Type": "application/json",
@@ -236,7 +237,7 @@ const PlaceDetailsPage = ({ fetchBookings }) => {
 
     setUserRating(selectedRating);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/ratings/${id}/`, {
+      const response = await fetch(`${API_URL}/api/ratings/${id}/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -11,6 +11,7 @@ import {
   FaTrash,
   FaArrowRight,
 } from "react-icons/fa";
+import API_URL from "../services/api";
 
 const Profile = () => {
   const [bookings, setBookings] = useState([]);
@@ -20,7 +21,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchBookmarks = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/user/bookmarks/", {
+        const response = await fetch(`${API_URL}/api/user/bookmarks/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -47,7 +48,7 @@ const Profile = () => {
           setBookings([]);
           return;
         }
-        const response = await fetch("http://127.0.0.1:8000/api/user/bookings/", {
+        const response = await fetch(`${API_URL}/api/user/bookings/`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",

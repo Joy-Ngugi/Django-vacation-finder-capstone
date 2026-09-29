@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import AuthContext from '../context/authContext';
 import { Link } from 'react-router-dom';
+import API_URL from '../services/api';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -21,7 +22,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/auth/login/',
+        `${API_URL}/api/auth/login/`,
         credentials
       );
       console.log(response.data);

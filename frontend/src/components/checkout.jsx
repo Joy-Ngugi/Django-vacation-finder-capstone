@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useStripe, CardElement } from "@stripe/react-stripe-js";
+import API_URL from "../services/api";
 
 function Checkout({ bookingData }) {
   const [sessionId, setSessionId] = useState(null);
   const stripe = useStripe();
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/create-checkout-session/", {
+    fetch(`${API_URL}/api/create-checkout-session/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     })

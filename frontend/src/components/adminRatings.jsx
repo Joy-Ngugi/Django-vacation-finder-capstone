@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import API_URL from "../services/api";
 
 const RatingsPage = ({ user }) => {
   const [ratings, setRatings] = useState([]);
@@ -7,7 +8,7 @@ const RatingsPage = ({ user }) => {
   useEffect(() => {
     const fetchRatings = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/admin/ratings/", {
+        const response = await fetch(`${API_URL}/api/admin/ratings/`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
